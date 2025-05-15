@@ -1,6 +1,6 @@
 {
 	"name": "auto-capitalise-file-names",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Automatically capitalise Obsidian file names to Sentence case or Title Case as you create or modify notes.",
 	"main": "main.js",
 	"scripts": {
