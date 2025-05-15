@@ -1,7 +1,7 @@
 {
-	"id": "autocapitalise",
+	"id": "auto-capitalise-file-names",
 	"name": "Auto Capitalise File Name",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
 "description": "Automatically capitalises new and modified markdown file names using sentence case or title case. Includes bulk commands and configurable delay.",
 	"author": "Obsidian",
