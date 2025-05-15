@@ -20,7 +20,7 @@ After installation, open the plugin settings to:
 
 ## Installation
 **Automatic**
-You can install the plugin via the Community Plugins tab within Obsidian. Just search for "Calendar."
+- You can install the plugin via the Community Plugins tab within Obsidian. Just search for "Calendar."
 
 **Manually build**
 - Clone this repo.
