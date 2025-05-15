@@ -22,8 +22,7 @@ After installation, open the plugin settings to:
 **Automatic**
 You can install the plugin via the Community Plugins tab within Obsidian. Just search for "Calendar."
 
-**Manual**
-## Development
+**Manually build**
 - Clone this repo.
 - Make sure your NodeJS is at least v16 (`node --version`).
 - Run `npm install` to install dependencies.
