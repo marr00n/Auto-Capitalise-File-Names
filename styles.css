@@ -1,0 +1,16 @@
+/*
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+*/
+
+/* Preview styles for the capitalisation mode setting */
+.setting-item-description .preview-result {
+    font-family: var(--font-monospace);
+    margin-left: 0.25em;
+    display: inline;
+    background: var(--background-modifier-message);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
