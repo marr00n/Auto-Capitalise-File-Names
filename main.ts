@@ -161,13 +161,29 @@ function toTitleCase(input: string): string {
 	return input
 		.split(/[-_]/g)
 		.map(segment => segment
-			.split(' ') // In case of spaces
-			.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.split(' ')
+			.map(word => {
+				// Preserve existing acronyms: fully uppercased words longer than 1 character
+				if (word === word.toUpperCase() && word.length > 1) {
+					return word;
+				}
+				return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+			})
 			.join(' '))
 		.join('-');
 }
 
 function toSentenceCase(input: string): string {
-	const lower = input.toLowerCase();
-	return lower.charAt(0).toUpperCase() + lower.slice(1);
+	return input.replace(/([^\s-_]+)/g, (word, offset, fullString) => {
+		// Preserve acronyms: all uppercase and longer than one letter
+		if (word === word.toUpperCase() && word.length > 1) {
+			return word;
+		}
+		const lower = word.toLowerCase();
+		// Capitalise first word only
+		if (offset === 0 || fullString.slice(0, offset).match(/[\s-_]+$/)) {
+			return lower.charAt(0).toUpperCase() + lower.slice(1);
+		}
+		return lower;
+	});
 }
