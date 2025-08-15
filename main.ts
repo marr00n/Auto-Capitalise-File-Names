@@ -23,7 +23,6 @@ export default class AutoCapitaliseFileNamesPlugin extends Plugin {
 	settings: AutoCapitaliseSettings;
 
 	async onload() {
-		console.log('Auto-capitalise-file-names plugin loaded.');
 		await this.loadSettings();
 		this.addSettingTab(new AutoCapitaliseSettingTab(this.app, this));
 
@@ -41,22 +40,26 @@ export default class AutoCapitaliseFileNamesPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'capitalise-all-file-names-title',
-			name: 'Capitalise all file names (Title case)',
+			name: 'Capitalise all file names (Title Case)',
 			callback: async () => {
 				await this.capitaliseAllFileNames('title');
-				new Notice('All file names capitalised (Title case).');
+				new Notice('All file names capitalised (Title Case).');
 			}
 		});
 
 		this.addCommand({
 			id: 'capitalise-current-file-title',
-			name: 'Capitalise current file name (Title case)',
-			callback: async () => {
+			name: 'Capitalise current file name (Title Case)',
+			checkCallback: (checking: boolean) => {
 				const file = this.app.workspace.getActiveFile();
 				if (file) {
-					await this.capitaliseFile(file, 'title');
-					new Notice('Current file name capitalised (Title case).');
+					if (!checking) {
+						this.capitaliseFile(file, 'title');
+						new Notice('Current file name capitalised (Title Case).');
+					}
+					return true;
 				}
+				return false;
 			}
 		});
 	}
@@ -68,7 +71,7 @@ export default class AutoCapitaliseFileNamesPlugin extends Plugin {
 
 	async handleFileCreate(file: TAbstractFile) {
 		if (!(file instanceof TFile)) return;
-		setTimeout(async () => {
+		window.setTimeout(async () => {
 			await this.capitaliseFile(file, this.settings.capitalisationMode);
 		}, this.settings.delayMs);
 	}
@@ -109,81 +112,89 @@ class AutoCapitaliseSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-	const { containerEl } = this;
-	containerEl.empty();
-	containerEl.createEl('h2', { text: 'Auto Capitalise File Names Settings' });
+		const { containerEl } = this;
+		containerEl.empty();
+		containerEl.createEl('p', { text: 'Auto Capitalise File Names Settings' });
 
-	let previewEl: HTMLElement;
+		let previewEl: HTMLElement;
 
-	const updatePreview = () => {
-		const example = 'example_file-name';
-		const result = this.plugin.settings.capitalisationMode === 'title'
-			? toTitleCase(example)
-			: toSentenceCase(example);
-		previewEl.setText(`Preview: "${example}" → "${result}"`);
-	};
+		const updatePreview = () => {
+			const example = 'an example_file-name';
+			const result = this.plugin.settings.capitalisationMode === 'title'
+				? toTitleCase(example)
+				: toSentenceCase(example);
+			previewEl.setText(`Preview: "${example}" → "${result}"`);
+		};
 
-	new Setting(containerEl)
-		.setName('Capitalisation mode')
-		.setDesc('Choose between sentence case or title case for automatic renaming.')
-		.addDropdown(drop => drop
-			.addOption('sentence', 'Sentence case')
-			.addOption('title', 'Title case')
-			.setValue(this.plugin.settings.capitalisationMode)
-			.onChange(async (value) => {
-				this.plugin.settings.capitalisationMode = value as 'sentence' | 'title';
-				await this.plugin.saveSettings();
-				updatePreview();
-			}));
-
-	// Add live preview
-	previewEl = containerEl.createEl('p', { cls: 'setting-item-description' });
-	updatePreview();
-
-	new Setting(containerEl)
-		.setName('Delay (ms) for new files')
-		.setDesc('Wait time before renaming a newly created file.')
-		.addText(text => text
-			.setValue(this.plugin.settings.delayMs.toString())
-			.onChange(async (value) => {
-				const parsed = parseInt(value);
-				if (!isNaN(parsed)) {
-					this.plugin.settings.delayMs = parsed;
+		new Setting(containerEl)
+			.setName('Capitalisation mode')
+			.setDesc('Choose between sentence case or title case for automatic renaming.')
+			.addDropdown(drop => drop
+				.addOption('sentence', 'Sentence case')
+				.addOption('title', 'Title Case')
+				.setValue(this.plugin.settings.capitalisationMode)
+				.onChange(async (value) => {
+					this.plugin.settings.capitalisationMode = value as 'sentence' | 'title';
 					await this.plugin.saveSettings();
-				}
-			}));
+					updatePreview();
+				}));
+
+		// Add live preview
+		previewEl = containerEl.createEl('p', { cls: 'setting-item-description' });
+		updatePreview();
+
+		new Setting(containerEl)
+			.setName('Delay (ms) for new files')
+			.setDesc('Wait time before renaming a newly created file.')
+			.addText(text => text
+				.setValue(this.plugin.settings.delayMs.toString())
+				.onChange(async (value) => {
+					const parsed = parseInt(value);
+					if (!isNaN(parsed)) {
+						this.plugin.settings.delayMs = parsed;
+						await this.plugin.saveSettings();
+					}
+				}));
 
 
-}
+	}
 }
 
 function toTitleCase(input: string): string {
-	return input
-		.split(/[-_]/g)
-		.map(segment => segment
-			.split(' ')
-			.map(word => {
-				// Preserve existing acronyms: fully uppercased words longer than 1 character
-				if (word === word.toUpperCase() && word.length > 1) {
-					return word;
-				}
-				return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-			})
-			.join(' '))
-		.join('-');
-}
+	if (typeof input !== 'string') {
+		return String(input);
+	}
 
-function toSentenceCase(input: string): string {
-	return input.replace(/([^\s-_]+)/g, (word, offset, fullString) => {
-		// Preserve acronyms: all uppercase and longer than one letter
+	return input.replace(/([^\s-_]+)/g, (word) => {
+		// Preserve existing acronyms: fully uppercased words longer than 1 character
 		if (word === word.toUpperCase() && word.length > 1) {
 			return word;
 		}
+		return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+	});
+}
+
+function toSentenceCase(input: string): string {
+	if (typeof input !== 'string') {
+		return String(input);
+	}
+
+	let isFirstWord = true;
+
+	return input.replace(/([^\s-_]+)/g, (word) => {
+		// Preserve acronyms: all uppercase and longer than one letter
+		if (word === word.toUpperCase() && word.length > 1) {
+			isFirstWord = false;
+			return word;
+		}
+
 		const lower = word.toLowerCase();
-		// Capitalise first word only
-		if (offset === 0 || fullString.slice(0, offset).match(/[\s-_]+$/)) {
+
+		if (isFirstWord) {
+			isFirstWord = false;
 			return lower.charAt(0).toUpperCase() + lower.slice(1);
 		}
+
 		return lower;
 	});
 }
